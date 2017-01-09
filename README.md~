@@ -14,9 +14,6 @@ Steps for arriving at the final tidy data set:
 10) For each pair of subject code and activity description, calculate the mean values for the other columns and create a new data set with the subject code, activity description and the calculated mean values for the other variables. This is the tidy data set we are interested in.
 11)Write the tidy data set from step (10) to the text file "tidy_data.txt".
 
-Read the tidy data file with the command:
-read.table("tidy_data.txt", header=TRUE)
-
 
 
 

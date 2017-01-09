@@ -1,0 +1,131 @@
+library(dplyr)
+
+library(stringr)
+
+## Reading in the names of the feature vector components
+
+features <- read.table("UCI HAR Dataset/features.txt")
+
+feature_names <- as.character(features[,2])
+
+## Creating a data frame with all the feature vectors
+feature_vectors_test <- read.table("UCI HAR Dataset/test/X_test.txt")
+feature_vectors_train <- read.table("UCI HAR Dataset/train/X_train.txt")
+feature_vectors <- rbind(feature_vectors_test, feature_vectors_train)
+names(feature_vectors) <- feature_names
+
+##print(names(feature_vectors))
+
+## Creating a data frame with the activity descriptions
+activity_codes_test <- read.table("UCI HAR Dataset/test/y_test.txt")
+activity_codes_train <- read.table("UCI HAR Dataset/train/y_train.txt")
+activity_codes <- rbind(activity_codes_test, activity_codes_train)
+
+activity_labels <- read.table("UCI HAR Dataset/activity_labels.txt")
+
+activity_labels <- as.character(activity_labels[,2])
+
+activity_labels <- sub("_", " ", activity_labels)
+
+func <- function(x){activity_labels[x]}
+
+activity_description <- sapply(activity_codes, func)
+
+activity_description <- data.frame("ActivityDescription"=activity_description[,1])
+
+
+
+## Creating a data frame with the subjects
+subject_test <- read.table("UCI HAR Dataset/test/subject_test.txt")
+subject_train <- read.table("UCI HAR Dataset/train/subject_train.txt")
+subject <- rbind(subject_test, subject_train)
+names(subject) <- c("Subject")
+
+##print(str(subject))
+## Concatenating the above three data frames to get the full data frame
+data <- cbind(subject, activity_description, feature_vectors)
+
+
+
+##Extracting just the measurements of mean and standard deviation for each measurement
+interested <- grep("mean\\(\\)|std\\(\\)", names(data))
+
+data <- data[,c(1,2,interested)]
+
+
+## Renaming the variable names so that they are descriptive
+
+feature_names <- names(data)
+
+feature_names <- sub("BodyBody", "Body", feature_names)
+
+feature_names <- sub("tBodyAccJerk", "Jerk of body in time space, ", 
+    feature_names)
+    
+feature_names <- sub("fBodyAccJerk", "Jerk of body in frequency space, ", 
+    feature_names)
+    
+feature_names <- sub("tBodyGyroJerk", "Angular acceleration of body in time space, ", feature_names)
+    
+feature_names <- sub("fBodyGyroJerk", "Angular acceleration of body in frequency space, ", feature_names)
+    
+feature_names <- sub("tBodyAcc", "Acceleration of body in time space, ",
+    feature_names)
+
+feature_names <- sub("fBodyAcc", "Acceleration of body in frequency space, ",    feature_names)
+    
+feature_names <- sub("tGravityAcc", "Gravitational acceleration in time space, ", feature_names)
+
+feature_names <- sub("fGravityAcc", "Gravitational acceleration in frequency space, ", feature_names)
+
+feature_names <- sub("tBodyGyro", "Angular velocity of body in time space, ", feature_names)
+
+feature_names <- sub("fBodyGyro", "Angular velocity of body in frequency space, ", feature_names)
+
+feature_names <- sub("Mag", "Magnitude, ", feature_names)
+
+feature_names <- sub("-X", "X component ", feature_names)
+feature_names <- sub("-Y", "Y component ", feature_names)
+feature_names <- sub("-Z", "Z component ", feature_names)
+
+feature_names <- sub("-mean\\(\\)", "Mean value, ", feature_names)
+feature_names <- sub("-std\\(\\)", "Standard deviation, ", feature_names)
+feature_names <- sub("-mad\\(\\)", "Median absolute deviation, ", feature_names)
+feature_names <- sub("-max\\(\\)", "Largest value in array, ", feature_names)
+feature_names <- sub("-min\\(\\)", "Smallest value in array, " , feature_names)
+feature_names <- sub("-sma\\(\\)", "Signal magnitude area, " , feature_names)
+feature_names <- sub("-energy\\(\\)", "Energy measure, " , feature_names)
+feature_names <- sub("-iqr\\(\\)", "Interquartile range, " , feature_names)
+feature_names <- sub("-entropy\\(\\)", "Signal entropy, " , feature_names)
+feature_names <- sub("-arCoeff\\(\\)", "Autoregression coefficient, " , feature_names)
+feature_names <- sub("-correlation\\(\\)", "correlation coefficient between two signals, " , feature_names)
+feature_names <- sub("-maxInds", "index of the frequency component with largest magnitude, " , feature_names)
+feature_names <- sub("-meanFreq\\(\\)", "Weighted average of the frequency components, " , feature_names)
+feature_names <- sub("-skewness\\(\\)", "skewness of the frequency domain signal, " , feature_names)
+feature_names <- sub("-kurtosis\\(\\)", "kurtosis of the frequency domain signal, ", feature_names)
+feature_names <- sub("-bandsEnergy\\(\\)", "Energy of a frequency interval within the 64 bins of the FFT of each window, ", feature_names)
+feature_names <- sub("-angle\\(\\)", "Angle between two vectors, ", feature_names)
+
+feature_names <- sub("gravityMean", "Mean of Gravity Vector", feature_names)
+
+feature_names <- str_trim(feature_names)
+
+feature_names <- sub(",$", "", feature_names)
+
+
+
+names(data) <- feature_names
+
+
+## Creating the tidy data set with values averaged for each subject and activity
+tidyData <- group_by(data, Subject, ActivityDescription)
+
+tidyDataNew <- summarize_each(tidyData, c("mean"))
+
+
+write.table(tidyDataNew, "tidy_data.txt", row.name=FALSE)
+
+
+
+
+
